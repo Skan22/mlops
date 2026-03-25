@@ -1,0 +1,22 @@
+FROM nvidia/cuda:12.6.3-base-ubuntu22.04 AS base
+
+# System dependencies 
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3-pip \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+#Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Dependencies (change occasionally)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen --no-dev
+
+# Training code (changes frequently)
+COPY src/ ./src/
+ENTRYPOINT ["uv","run","python","src/train.py"]
+
